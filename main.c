@@ -156,12 +156,39 @@ void primes(){
 	//Loop all the numbers.
 	while(true)
 	{
-		//If it is prime print.
+		//If it is prime print the number.
 		if(is_prime(n))
 		{
 			writelong(n);
 		}
+		//The next number
 		n++;
+	}
+// Can be done faster if only doing odd numbers and only trying to divide with previously found prime numbers.	
+}
+
+
+//Make one of the segments of the LCD blink.
+void blink(void)
+{
+	//prescaling factor of 256.
+	TCCR1B = (1 << CS10) | (0 << CS11) | (0 << CS12);
+	
+	
+	//Time counter in 16 bit.
+	//8 MHz system clock with a prescaling factor of 256.
+	uint16_t = 8000000/256;
+	
+	
+	//Falg to see if it is on or off.
+	bool onFlag = true;
+	
+	
+	// Loop to make the LCD blink.
+	while(true)
+	{
+		
+		
 	}
 	
 }
