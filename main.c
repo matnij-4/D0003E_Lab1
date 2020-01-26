@@ -177,18 +177,53 @@ void blink(void)
 	
 	//Time counter in 16 bit.
 	//8 MHz system clock with a prescaling factor of 256.
-	uint16_t = 8000000/256;
+	uint16_t timeCounter = 8000000/256;
 	
 	
-	//Falg to see if it is on or off.
-	bool onFlag = true;
+	//Flag to see if it is on or off.
+	bool onFlag = false;
 	
 	
 	// Loop to make the LCD blink.
 	while(true)
 	{
 		
+		//Will start the blinking if the timer and onFlag is right.
+		if(TCNT1 >= timeCounter && !onFlag){
 		
+		//Set the flag to known the LCD have been accessed.
+		onFlag = true;
+		
+		//If the timmer reach the top it will need to reset.
+		if(timeCounter + 8000000/256 > 0xffff)
+		{
+			//Reset the timmer.
+			timeCounter = timeCounter + 8000000/256 - 0xffff;
+		}
+		//Add to the counter
+		else
+		{
+			//adds to the counter.
+			timeCounter = timeCounter + 8000000/256;
+		}
+		
+		//Read the LCD port to see if it is already on.
+		if(LCDDR0 != 0)
+		{
+			//Turn in off
+			LCDDR0 = 0x00;
+		}
+		else
+		{
+			//Turn it on.
+			LCDDR0 = 0x06;
+		}
+		
+		
+		
+		//Cycle Check and then begin the blinking.
+		if(timeCounter > TCNT1)
+			onFlag = false;
 	}
 	
 }
@@ -202,18 +237,18 @@ int main(void)
 	CLKPR = 0x00;
 	
 	
-	//Inizialis the LCD settings and the power supply.
+	//Initializes the LCD settings and the power supply.
     LCDInit();
 	
 	
 	
-	primes();
 	
     while (true) 
     {
 		//writeChar(8,5);
-		//writelong(120);
+		//writelong(133769420);
+		primes();
     }
+	
 	return 0;
 }
-
