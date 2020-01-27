@@ -53,17 +53,19 @@ void writeChar(char ch, int pos)
 	}
 	
 	
+	uint16_t number = 0x0;
+	
 	// Check if it is a 0 to 9.
-	if (ch < 0 || ch > 9) {
-		ch = 0;
+	if (ch >= '0' || ch <= '9')
+	{
+		//Get the number out of the array.
+		number = sccTable[ch - '0'];
 	}
 	
 	
-	//Get the number out of the array.
-	uint16_t number = sccTable[ch];
 	
 	
-	//Point to the right position.
+	//Point to the right position. Divide by 2 you can say.
 	lcdaddr += pos >> 1;
 	
 	
@@ -92,6 +94,7 @@ void writeChar(char ch, int pos)
 			nibbleNumber = nibbleNumber << 4;
 		}
 		
+		//Send the nibble.
 		*lcdaddr = (*lcdaddr & mask) | nibbleNumber;
 		
 		lcdaddr += 5;
@@ -104,9 +107,9 @@ void writeChar(char ch, int pos)
 
 void writelong(long i)
 {
-	//Converts it to a char and set the position to 5.
-	char chars = i;
+	//Set the position to 5.
 	int pos = 5;
+	
 	
 	//For loop to go through all the numbers.
 	for(int n = 0; n < 6 ; n++ )
@@ -117,8 +120,8 @@ void writelong(long i)
 			break;
 		}
 		
-		//Call the function with the position.
-		writeChar(i % 10, pos);
+		//Call the function with the position. But convert it first with '0'
+		writeChar((i % 10)+'0', pos);
 		
 		// Change Pos and cut the long.
 		pos -= 1;
@@ -149,8 +152,8 @@ bool is_prime(long i)
 //Finds prime numbers and prints them.
 void primes(){
 	
-	//Beinge at 2 as it is the first prime.
-	int n = 2;
+	//Being at 2 as it is the first prime.
+	long n = 2;
 	
 	
 	//Loop all the numbers.
@@ -172,12 +175,13 @@ void primes(){
 void blink(void)
 {
 	//prescaling factor of 256.
-	TCCR1B = (1 << CS10) | (0 << CS11) | (0 << CS12);
+	TCCR1B = (0 << CS10) | (0 << CS11) | (1 << CS12);
 	
 	
 	//Time counter in 16 bit.
 	//8 MHz system clock with a prescaling factor of 256.
-	uint16_t timeCounter = 8000000/256;
+	// 31250 just happen to be 8000000/256.
+	uint16_t timeCounter = 31250;
 	
 	
 	//Flag to see if it is on or off.
@@ -189,42 +193,53 @@ void blink(void)
 	{
 		
 		//Will start the blinking if the timer and onFlag is right.
-		if(TCNT1 >= timeCounter && !onFlag){
-		
-		//Set the flag to known the LCD have been accessed.
-		onFlag = true;
-		
-		//If the timmer reach the top it will need to reset.
-		if(timeCounter + 8000000/256 > 0xffff)
+		if(TCNT1 >= timeCounter && !onFlag)
 		{
-			//Reset the timmer.
-			timeCounter = timeCounter + 8000000/256 - 0xffff;
+			
+			//Set the flag to known the LCD have been accessed.
+			onFlag = true;
+			
+			//If the timer reach the top it will need to reset.
+			if(timeCounter + 31250 > 0xffff)
+			{
+				//Reset the timer.
+				timeCounter = 31250;
+			}
+			//Add to the counter
+			else
+			{
+				//adds to the counter.
+				timeCounter = timeCounter + 31250;
+			}
+			
+			//Read the LCD port to see if it is already on.
+			if(LCDDR0 != 0)
+			{
+				//Turn in off
+				LCDDR0 = 0x00;
+			}
+			else
+			{
+				//Turn it on.
+				LCDDR0 = 0x02;
+			}
+			
+			
 		}
-		//Add to the counter
-		else
-		{
-			//adds to the counter.
-			timeCounter = timeCounter + 8000000/256;
-		}
-		
-		//Read the LCD port to see if it is already on.
-		if(LCDDR0 != 0)
-		{
-			//Turn in off
-			LCDDR0 = 0x00;
-		}
-		else
-		{
-			//Turn it on.
-			LCDDR0 = 0x06;
-		}
-		
-		
 		
 		//Cycle Check and then begin the blinking.
 		if(timeCounter > TCNT1)
-			onFlag = false;
+			{
+				onFlag = false;
+			}
+		
 	}
+}
+
+
+//Activates lights on the LCD by using the joystick.
+void button(void)
+{
 	
 }
 
@@ -245,9 +260,10 @@ int main(void)
 	
     while (true) 
     {
-		//writeChar(8,5);
+		//writeChar('8',5);
 		//writelong(133769420);
-		primes();
+		//primes();
+		blink();
     }
 	
 	return 0;
