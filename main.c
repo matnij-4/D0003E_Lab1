@@ -202,8 +202,8 @@ void blink(void)
 			//If the timer reach the top it will need to reset.
 			if(timeCounter + 31250 > 0xffff)
 			{
-				//Reset the timer.
-				timeCounter = 31250;
+				//Reset the counter. Needs to have the same as the clock.
+				timeCounter = timeCounter + 31250 - 0xffff;
 			}
 			//Add to the counter
 			else
@@ -240,6 +240,43 @@ void blink(void)
 //Activates lights on the LCD by using the joystick.
 void button(void)
 {
+	//Set the port 7 of port B to 1.
+	PORTB = 0x80;
+	
+	// See if it moved or not.
+	bool itsOn = false;
+	
+	//See if we are holding or not.
+	bool notPressed = true;
+	
+	//Turn on a segment.
+	LCDDR2 = 0x02;
+	
+	//Busy waiting.
+	while(true)
+	{
+		//Read the pin as it is a zero.
+		if(notPressed && !itsOn && PINB >> 7 == 0)
+		{
+			notPressed = false;
+			itsOn = true;
+			LCDDR2 = 0x20;
+		}
+		
+		else if(notPressed && itsOn && PINB >> 7 == 0)
+		{
+			notPressed = false;
+			itsOn = false;
+			LCDDR2 = 0x02;
+		}
+		
+		// Read that you released the Joystick.
+		else if(PINB >> 7 == 1)
+		{
+			notPressed = true;
+		}
+	}
+	
 	
 }
 
@@ -263,7 +300,8 @@ int main(void)
 		//writeChar('8',5);
 		//writelong(133769420);
 		//primes();
-		blink();
+		//blink();
+		button();
     }
 	
 	return 0;
