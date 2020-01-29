@@ -213,15 +213,15 @@ void blink(void)
 			}
 			
 			//Read the LCD port to see if it is already on.
-			if(LCDDR0 != 0)
+			if(LCDDR8 != 0)
 			{
 				//Turn in off
-				LCDDR0 = 0x00;
+				LCDDR8 = 0x0;
 			}
 			else
 			{
 				//Turn it on.
-				LCDDR0 = 0x02;
+				LCDDR8 = 0x1;
 			}
 			
 			
@@ -251,6 +251,7 @@ void button(void)
 	
 	//Turn on a segment.
 	LCDDR2 = 0x02;
+
 	
 	//Busy waiting.
 	while(true)
@@ -282,6 +283,127 @@ void button(void)
 
 
 
+
+
+
+//Do all the things at the same time.
+void comb(void)
+{
+	
+	//Button Settings
+	
+	//Set the port 7 of port B to 1.
+	PORTB = 0x80;
+		
+	// See if it moved or not.
+	bool itsOn = false;
+		
+	//See if we are holding or not.
+	bool notPressed = true;
+		
+	//Turn on a segment.
+	LCDDR13 = 0x0;
+	LCDDR18 = 0x1;
+		
+		
+		
+	// Blink Settings
+		
+	//prescaling factor of 256.
+	TCCR1B = (0 << CS10) | (0 << CS11) | (1 << CS12);
+		
+	//Time counter in 16 bit.
+	//8 MHz system clock with a prescaling factor of 256.
+	// 31250 just happen to be 8000000/256.
+	uint16_t timeCounter = 31250;
+		
+	//Flag to see if it is on or off.
+	bool onFlag = false;
+		
+		
+		
+	int n = 2;
+		
+	while(true)
+	{
+		
+		//Button Operations
+		//Read the pin as it is a zero.
+		if(notPressed && !itsOn && PINB >> 7 == 0)
+		{
+			notPressed = false;
+			itsOn = true;
+			LCDDR13 = 0x0;
+			LCDDR18 = 0x1;
+		}
+		
+		else if(notPressed && itsOn && PINB >> 7 == 0)
+		{
+			notPressed = false;
+			itsOn = false;
+			LCDDR13 = 0x1;
+			LCDDR18 = 0x0;
+		}
+		
+		// Read that you released the Joystick.
+		else if(PINB >> 7 == 1)
+		{
+			notPressed = true;
+		}
+		
+		//Will start the blinking if the timer and onFlag is right.
+		if(TCNT1 >= timeCounter && !onFlag)
+		{
+			
+			//Set the flag to known the LCD have been accessed.
+			onFlag = true;
+			
+			//If the timer reach the top it will need to reset.
+			if(timeCounter + 31250 > 0xffff)
+			{
+				//Reset the counter. Needs to have the same as the clock.
+				timeCounter = timeCounter + 31250 - 0xffff;
+			}
+			//Add to the counter
+			else
+			{
+				//adds to the counter.
+				timeCounter = timeCounter + 31250;
+			}
+			
+			//Read the LCD port to see if it is already on.
+			if(LCDDR8 != 0)
+			{
+				//Turn in off
+				LCDDR8 = 0x0;
+			}
+			else
+			{
+				//Turn it on.
+				LCDDR8 = 0x1;
+			}
+			
+			
+		}
+		
+		//Cycle Check and then begin the blinking.
+		if(timeCounter > TCNT1)
+		{
+			onFlag = false;
+		}
+		
+		// Just print a prime if the time is there.
+		if(is_prime(n)){
+			writelong(n);
+		}
+		n++;
+		
+	}
+
+}
+
+
+
 int main(void)
 {
 	// Disabled the clock prescaler functionality.
@@ -301,8 +423,17 @@ int main(void)
 		//writelong(133769420);
 		//primes();
 		//blink();
-		button();
+		//button();
+		comb();
     }
+	
+	
+	
+	
+
+		
+		
+	
 	
 	return 0;
 }
