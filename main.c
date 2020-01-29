@@ -428,12 +428,12 @@ int main(void)
 	
     while (true) 
     {
-		//writeChar('8',3);
+		writeChar('8',3);
 		//writelong(133769420);
 		//primes();
 		//blink();
 		//button();
-		comb();
+		//comb();
     }
 	
 	
