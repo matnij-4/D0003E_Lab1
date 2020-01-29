@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define FACTOR 31250
+
 
 void LCDInit(void) {
 	
@@ -52,7 +54,7 @@ void writeChar(char ch, int pos)
 		return;
 	}
 	
-	
+	// The number to print.
 	uint16_t number = 0x0;
 	
 	// Check if it is a 0 to 9.
@@ -91,6 +93,7 @@ void writeChar(char ch, int pos)
 		//Check position.
 		if(pos % 2 != 0)
 		{
+			//Shift the nibble to the right pos.
 			nibbleNumber = nibbleNumber << 4;
 		}
 		
@@ -180,8 +183,10 @@ void blink(void)
 	
 	//Time counter in 16 bit.
 	//8 MHz system clock with a prescaling factor of 256.
-	// 31250 just happen to be 8000000/256.
-	uint16_t timeCounter = 31250;
+	//31250 just happen to be 8000000/256.
+	//FACTOR = 31250.
+	uint16_t timeCounter = FACTOR;
+
 	
 	
 	//Flag to see if it is on or off.
@@ -200,28 +205,28 @@ void blink(void)
 			onFlag = true;
 			
 			//If the timer reach the top it will need to reset.
-			if(timeCounter + 31250 > 0xffff)
+			if(timeCounter + FACTOR > 0xffff)
 			{
 				//Reset the counter. Needs to have the same as the clock.
-				timeCounter = timeCounter + 31250 - 0xffff;
+				timeCounter = timeCounter + FACTOR - 0xffff;
 			}
 			//Add to the counter
 			else
 			{
 				//adds to the counter.
-				timeCounter = timeCounter + 31250;
+				timeCounter = timeCounter + FACTOR;
 			}
 			
 			//Read the LCD port to see if it is already on.
-			if(LCDDR8 != 0)
+			if(LCDDR3 != 0)
 			{
 				//Turn in off
-				LCDDR8 = 0x0;
+				LCDDR3 = 0x0;
 			}
 			else
 			{
 				//Turn it on.
-				LCDDR8 = 0x1;
+				LCDDR3 = 0x1;
 			}
 			
 			
@@ -250,7 +255,8 @@ void button(void)
 	bool notPressed = true;
 	
 	//Turn on a segment.
-	LCDDR2 = 0x02;
+	LCDDR13 = 0x1;
+	LCDDR18 = 0x0;
 
 	
 	//Busy waiting.
@@ -261,14 +267,16 @@ void button(void)
 		{
 			notPressed = false;
 			itsOn = true;
-			LCDDR2 = 0x20;
+			LCDDR13 = 0x0;
+			LCDDR18 = 0x1;
 		}
 		
 		else if(notPressed && itsOn && PINB >> 7 == 0)
 		{
 			notPressed = false;
 			itsOn = false;
-			LCDDR2 = 0x02;
+			LCDDR13 = 0x1;
+			LCDDR18 = 0x0;
 		}
 		
 		// Read that you released the Joystick.
@@ -315,14 +323,14 @@ void comb(void)
 	//Time counter in 16 bit.
 	//8 MHz system clock with a prescaling factor of 256.
 	// 31250 just happen to be 8000000/256.
-	uint16_t timeCounter = 31250;
+	uint16_t timeCounter = FACTOR;
 		
 	//Flag to see if it is on or off.
 	bool onFlag = false;
 		
 		
-		
-	int n = 2;
+	// Prime
+	int n = 5000;
 		
 	while(true)
 	{
@@ -351,6 +359,7 @@ void comb(void)
 			notPressed = true;
 		}
 		
+		//Blinking Operation.
 		//Will start the blinking if the timer and onFlag is right.
 		if(TCNT1 >= timeCounter && !onFlag)
 		{
@@ -359,28 +368,28 @@ void comb(void)
 			onFlag = true;
 			
 			//If the timer reach the top it will need to reset.
-			if(timeCounter + 31250 > 0xffff)
+			if(timeCounter + FACTOR > 0xffff)
 			{
 				//Reset the counter. Needs to have the same as the clock.
-				timeCounter = timeCounter + 31250 - 0xffff;
+				timeCounter = timeCounter + FACTOR - 0xffff;
 			}
 			//Add to the counter
 			else
 			{
 				//adds to the counter.
-				timeCounter = timeCounter + 31250;
+				timeCounter = timeCounter + FACTOR;
 			}
 			
 			//Read the LCD port to see if it is already on.
-			if(LCDDR8 != 0)
+			if(LCDDR3 != 0)
 			{
 				//Turn in off
-				LCDDR8 = 0x0;
+				LCDDR3 = 0x0;
 			}
 			else
 			{
 				//Turn it on.
-				LCDDR8 = 0x1;
+				LCDDR3 = 0x1;
 			}
 			
 			
@@ -403,7 +412,7 @@ void comb(void)
 }
 
 
-
+// Main that runs the code to the program.
 int main(void)
 {
 	// Disabled the clock prescaler functionality.
@@ -419,20 +428,13 @@ int main(void)
 	
     while (true) 
     {
-		//writeChar('8',5);
+		//writeChar('8',3);
 		//writelong(133769420);
 		//primes();
 		//blink();
 		//button();
 		comb();
     }
-	
-	
-	
-	
-
-		
-		
 	
 	
 	return 0;
